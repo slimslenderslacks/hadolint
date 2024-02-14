@@ -13,3 +13,5 @@ dist-newstyle
 travis_wait_*.log
 
 cabal.project.local*
+/result
+/.envrc
