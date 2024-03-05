@@ -11,6 +11,7 @@ import qualified Data.Text as Text
 import Hadolint.Rule
 import qualified Hadolint.Shell as Shell
 import Language.Docker.Syntax
+import Data.Set
 
 
 -- This data encapsulates the name of a build stage. It may be None withing an
@@ -38,8 +39,9 @@ dl3042 = customRule check (emptyState Empty)
               \ Use `pip install --no-cache-dir <package>`"
     check _ st (From from) = st |> modify (rememberStage from)
     check _ st (Env pairs) = st |> modify (registerEnv pairs)
-    check line st (Run (RunArgs args _))
+    check line st (Run (RunArgs args flags))
       | Acc s ncm <- state st, Just True <- Map.lookup s ncm = st
+      | cacheMount flags = st
       | foldArguments pipNoCacheDirIsSet args = st
       | foldArguments (Shell.noCommands forgotNoCacheDir) args = st
       | otherwise = st |> addFail CheckFailure {..}
@@ -118,6 +120,22 @@ pipNoCacheDirSet pairs
   | val <- lookup "PIP_NO_CACHE_DIR" pairs,
     isJust val && fromJust val `notElem` truthy = False
   | otherwise = True
+
+-- check if a RunMount is a CacheMount
+isCacheMount :: RunMount -> Bool
+isCacheMount (CacheMount _) = True
+isCacheMount _ = False
+
+-- Set of RunMounts must contain at least one CacheMount
+containsOneCacheMount :: Set RunMount -> Bool
+containsOneCacheMount xs = Data.Set.foldl foldable False xs
+  where 
+    foldable a b = a || (isCacheMount b)
+
+-- do not flag this as a problem if using a cacheMount
+cacheMount :: RunFlags -> Bool
+cacheMount (RunFlags {mount}) = (containsOneCacheMount mount)
+cacheMount _ = False
 
 truthy :: Set Text
 truthy = Set.fromList ["1", "true", "True", "TRUE", "on", "On", "ON", "yes", "Yes", "YES"]
