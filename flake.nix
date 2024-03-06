@@ -9,28 +9,28 @@
       let
 
         staticFlags = { pkgs }: [
-          "--disable-executable-dynamic"
-          "--disable-shared"
-          "--ghc-option=-optl=-pthread"
-          "--ghc-option=-optl=-static"
-          "--ghc-option=-optl=-L${pkgs.gmp6.override { withStatic = true; }}/lib"
-          "--ghc-option=-optl=-L${pkgs.glibc.static}/lib"
+          #"--disable-executable-dynamic"
+          #"--disable-shared"
+          #"--ghc-option=-optl=-pthread"
+          #"--ghc-option=-optl=-static"
+          #"--ghc-option=-optl=-L${pkgs.gmp6.override { withStatic = true; }}/lib"
+          #"--ghc-option=-optl=-L${pkgs.glibc.static}/lib"
         ];
 
-        hsApp = { hNix, configureFlags }:
-          hNix // {
-            hadolint = hNix.hadolint // {
-              components = hNix.hadolint.components // {
-                exes = hNix.hadolint.components.exes // {
-                  hadolint = hNix.hadolint.components.exes.hadolint // {
-                    dontStrip = false;
-                    dontPatchElf = false;
-                    configureFlags = configureFlags;
-                  };
-                };
-              };
-            };
-          };
+        #hsApp = { hNix, configureFlags }:
+          #hNix // {
+            #hadolint = hNix.hadolint // {
+              #components = hNix.hadolint.components // {
+                #exes = hNix.hadolint.components.exes // {
+                  #hadolint = hNix.hadolint.components.exes.hadolint // {
+                    #dontStrip = false;
+                    #dontPatchElf = false;
+                    #configureFlags = configureFlags;
+                  #};
+                #};
+              #};
+            #};
+          #};
 
         overlays = [
           haskellNix.overlay
@@ -61,7 +61,7 @@
                   (staticFlags final);
             in
             {
-              project = (hsApp { hNix = p; inherit configureFlags; });
+              project = p; #(hsApp { hNix = p; inherit configureFlags; });
             })
         ];
 
